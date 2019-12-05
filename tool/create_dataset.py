@@ -125,7 +125,7 @@ def read_data_from_file_for_text_render(file_path):
             break
         lines = line.split( ); 
         path = Path(file_path)
-        image_path_list.append(str(path.parent)+"/"+lines[0]+".png")
+        image_path_list.append(str(path.parent)+"/"+lines[0]+".jpg")
         label_list.append(lines[1])
 
     return image_path_list, label_list
