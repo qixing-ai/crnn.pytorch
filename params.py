@@ -1,69 +1,34 @@
-# import alphabets
-
-# # about data and net
-# alphabet = alphabets.alphabet
-# keep_ratio = False # whether to keep ratio for image resize
-# manualSeed = 1234 # reproduce experiemnt
-# random_sample = True # whether to sample the dataset with random sampler
-# imgH = 32 # the height of the input image to network
-# imgW = 100 # the width of the input image to network
-# nh = 256 # size of the lstm hidden state
-# nc = 1
-# pretrained = '' # path to pretrained model (to continue training)
-# expr_dir = 'expr' # where to store samples and models
-# dealwith_lossnan = False # whether to replace all nan/inf in gradients to zero
-
-# # hardware
-# cuda = False # enables cuda
-# multi_gpu = False # whether to use multi gpu
-# ngpu = 0 # number of GPUs to use. Do remember to set multi_gpu to True!
-# workers = 0 # number of data loading workers
-
-# # training process
-# displayInterval = 5 # interval to be print the train loss
-# valInterval = 10 # interval to val the model loss and accuray
-# saveInterval = 5 # interval to save model
-# n_val_disp = 10 # number of samples to display when val the model
-
-# # finetune
-# nepoch = 10 # 训练次数
-# batchSize = 20 # input batch size
-# lr =  0.001 # learning rate for Critic, not used by adadealta
-# beta1 = 0.5 # beta1 for adam. default=0.5
-# adam = True # whether to use adam (default is rmsprop)
-# adadelta = True # whether to use adadelta (default is rmsprop)
-
 import alphabets
 
-# about data and net
+# 关于数据和网络
 alphabet = alphabets.alphabet
-keep_ratio = False # whether to keep ratio for image resize
-manualSeed = 1234 # reproduce experiemnt
-random_sample = True # whether to sample the dataset with random sampler
-imgH = 32 # the height of the input image to network
-imgW = 100 # the width of the input image to network
-nh = 256 # size of the lstm hidden state
+keep_ratio = False # 是否按比例调整图像大小
+manualSeed = 1234 # 人工种子
+random_sample = True # 是否使用随机采样器对数据集进行采样
+imgH = 32 # 输入图像到网络的高度
+imgW = 100 # 输入图像到网络的宽度
+nh = 256 # lstm隐藏状态的大小
 nc = 1
-pretrained = 'expr/netCRNN_36_30.pth' # path to pretrained model (to continue training)
-expr_dir = 'expr' # where to store samples and models
-dealwith_lossnan = False # whether to replace all nan/inf in gradients to zero
+pretrained = 'expr/netCRNN_36_30.pth' # 预训练模型的路径(继续训练)
+expr_dir = 'expr' # 哪里存放样品和模型
+dealwith_lossnan = False # 是否将梯度中的所有nan/inf替换为零
 
-# hardware
-cuda = True # enables cuda
-multi_gpu = False # whether to use multi gpu
-ngpu = 1 # number of GPUs to use. Do remember to set multi_gpu to True!
-workers = 0 # number of data loading workers
+# 计算机硬件
+cuda = True # 支持cuda
+multi_gpu = False # 是否使用multi gpu
+ngpu = 1 # 要使用的gpu数量。记得设置multi_gpu为true
+workers = 0 # 数据加载工人的数量
 
-# training process
-displayInterval = 10 # interval to be print the train loss
-valInterval = 10 # interval to val the model loss and accuray
-saveInterval = 50 # interval to save model
-n_val_disp = 20 # number of samples to display when val the model
+# 训练参数
+displayInterval = 10 # 打印时间间隔
+valInterval = 10 # 计算模型损失与精度的时间间隔
+saveInterval = 50 # 模型保存间隔
+n_val_disp = 20 # 验证模型的样本数量
 
-# finetune
-nepoch = 1000 # number of epochs to train for
-batchSize = 64 # input batch size
-lr = 0.0001 # learning rate for Critic, not used by adadealta
-beta1 = 0.5 # beta1 for adam. default=0.5
-adam = False # whether to use adam (default is rmsprop)
-adadelta = False # whether to use adadelta (default is rmsprop)
+# 微调
+nepoch = 1000 # 要为几个时代而训练
+batchSize = 64 # 输入批大小
+lr = 0.0001 # 评论家的学习速度，不被adadealta使用
+beta1 = 0.5 # beta1亚当。默认= 0.5
+adam = False # 是否使用adam(默认是rmsprop)
+adadelta = False # 是否使用adadelta(默认是rmsprop)
