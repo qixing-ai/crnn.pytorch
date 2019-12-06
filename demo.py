@@ -1,7 +1,6 @@
 import torch
 from torch.autograd import Variable
-import utils
-import dataset
+from tool import utils, dataset
 from PIL import Image
 
 import models.crnn as crnn

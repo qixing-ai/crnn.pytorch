@@ -12,12 +12,10 @@ import numpy as np
 # from warpctc_pytorch import CTCLoss
 from torch.nn import CTCLoss
 import os
-import utils
-import dataset
+from tool import utils, dataset
 
 import models.crnn as net
 import params
-import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-train', '--trainroot', required=True, help='path to train dataset')
@@ -51,8 +49,8 @@ def data_loader():
     else:
         sampler = None
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=params.batchSize, \
-            shuffle=True, sampler=sampler, num_workers=int(params.workers), \
-            collate_fn=dataset.alignCollate(imgH=params.imgH, imgW=params.imgW, keep_ratio=params.keep_ratio))
+                                               shuffle=True, sampler=sampler, num_workers=int(params.workers), \
+                                               collate_fn=dataset.alignCollate(imgH=params.imgH, imgW=params.imgW, keep_ratio=params.keep_ratio))
     
     # val
     val_dataset = dataset.lmdbDataset(root=args.valroot, transform=dataset.resizeNormalize((params.imgW, params.imgH)))
