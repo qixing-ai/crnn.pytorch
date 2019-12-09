@@ -9,7 +9,7 @@ imgH = 32 # 输入图像到网络的高度
 imgW = 100 # 输入图像到网络的宽度
 nh = 256 # lstm隐藏状态的大小
 nc = 1
-pretrained = 'expr/netCRNN_36_30.pth' # 预训练模型的路径(继续训练)
+pretrained = 'expr/netCRNN_99_50.pth' # 预训练模型的路径(继续训练)
 expr_dir = 'expr' # 哪里存放样品和模型
 dealwith_lossnan = False # 是否将梯度中的所有nan/inf替换为零
 
