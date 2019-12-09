@@ -22,7 +22,7 @@ workers = 0 # 数据加载工人的数量
 # 训练参数
 displayInterval = 10 # 打印时间间隔
 valInterval = 10 # 计算模型损失与精度的时间间隔
-saveInterval = 50 # 模型保存间隔
+saveInterval = 40 # 模型保存间隔
 n_val_disp = 20 # 验证模型的样本数量
 
 # 微调
