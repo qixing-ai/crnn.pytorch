@@ -18,27 +18,27 @@ import models.crnn as net
 import params
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-train', '--trainroot', required=True, help='path to train dataset')
-parser.add_argument('-val', '--valroot', required=True, help='path to val dataset')
+parser.add_argument('-train', '--trainroot', required=False,default='./trainlmdb', help='path to train dataset')
+parser.add_argument('-val', '--valroot', required=False, default='./trainlmdb',help='path to val dataset')
 args = parser.parse_args()
 
+# 创建模型保存文件件
 if not os.path.exists(params.expr_dir):
     os.makedirs(params.expr_dir)
 
-# ensure everytime the random is the same
+# 确保每次随机都是一样的
 random.seed(params.manualSeed)
 np.random.seed(params.manualSeed)
 torch.manual_seed(params.manualSeed)
-
+# 增加程序的运行效率
 cudnn.benchmark = True
 
 if torch.cuda.is_available() and not params.cuda:
-    print("WARNING: You have a CUDA device, so you should probably set cuda in params.py to True")
+    print("警告:你有一个CUDA设备，所以你应该将CUDA的params.py设置为True")
 
 # -----------------------------------------------
 """
-In this block
-    Get train and val data_loader
+加载训练和验证数据
 """
 def data_loader():
     # train
@@ -63,15 +63,16 @@ train_loader, val_loader = data_loader()
 
 # -----------------------------------------------
 """
-In this block
-    Net init
-    Weight init
-    Load pretrained model
+网络初始化
+重初始化
+加载预训练模型
 """
 def weights_init(m):
     classname = m.__class__.__name__
+    # 对卷积网络，m是模型，weight是权重
     if classname.find('Conv') != -1:
         m.weight.data.normal_(0.0, 0.02)
+    # 对回归网络
     elif classname.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
@@ -79,9 +80,12 @@ def weights_init(m):
 def net_init():
     nclass = len(params.alphabet) + 1
     crnn = net.CRNN(params.imgH, params.nc, nclass, params.nh)
+    # CRNN网络中每个子模块都执行weights_init
     crnn.apply(weights_init)
+
+    # 加载预训练
     if params.pretrained != '':
-        print('loading pretrained model from %s' % params.pretrained)
+        print('加载预训练模型 %s' % params.pretrained)
         if params.multi_gpu:
             crnn = torch.nn.DataParallel(crnn)
         crnn.load_state_dict(torch.load(params.pretrained))
@@ -89,34 +93,33 @@ def net_init():
     return crnn
 
 crnn = net_init()
+# 打印
 print(crnn)
 
 # -----------------------------------------------
 """
-In this block
-    Init some utils defined in utils.py
+初始化在utils.py中定义的一些utils
 """
-# Compute average for `torch.Variable` and `torch.Tensor`.
+# 计算平均 for `torch.Variable` and `torch.Tensor`.
 loss_avg = utils.averager()
 
-# Convert between str and label.
+# 在str和label之间进行转换.
 converter = utils.strLabelConverter(params.alphabet)
 
 # -----------------------------------------------
 """
-In this block
-    criterion define
+计算丢失率
 """
 criterion = CTCLoss()
 
 # -----------------------------------------------
 """
 In this block
-    Init some tensor
-    Put tensor and net on cuda
+初始化一些张量
+把张量和网放在cuda上
     NOTE:
-        image, text, length is used by both val and train
-        becaues train and val will never use it at the same time.
+        图像，文本，长度都被val和train使用
+        becaues train and val 永远不会同时使用它。
 """
 image = torch.FloatTensor(params.batchSize, 3, params.imgH, params.imgH)
 text = torch.LongTensor(params.batchSize * 5)
@@ -126,19 +129,19 @@ if params.cuda and torch.cuda.is_available():
     criterion = criterion.cuda()
     image = image.cuda()
     text = text.cuda()
-
     crnn = crnn.cuda()
     if params.multi_gpu:
         crnn = torch.nn.DataParallel(crnn, device_ids=range(params.ngpu))
-
+# data：存储了Tensor，是本体的数据
+# grad：保存了data的梯度，本事是个Variable而非Tensor，与data形状一致
+# grad_fn：指向Function对象，用于反向传播的梯度计算之用
 image = Variable(image)
 text = Variable(text)
 length = Variable(length)
 
 # -----------------------------------------------
 """
-In this block
-    Setup optimizer
+设置优化器
 """
 if params.adam:
     optimizer = optim.Adam(crnn.parameters(), lr=params.lr, betas=(params.beta1, 0.999))
@@ -150,9 +153,9 @@ else:
 # -----------------------------------------------
 """
 In this block
-    Dealwith lossnan
+    处理lossnan
     NOTE:
-        I use different way to dealwith loss nan according to the torch version. 
+        我用不同的方式来处理亏损南根据torch的版本. 
 """
 if params.dealwith_lossnan:
     if torch.__version__ >= '1.1.0':
@@ -221,22 +224,28 @@ def val(net, criterion):
     accuracy = n_correct / float(max_iter * params.batchSize)
     print('Val loss: %f, accuray: %f' % (loss_avg.val(), accuracy))
 
-
+# 开始训练
 def train(net, criterion, optimizer, train_iter):
     for p in crnn.parameters():
         p.requires_grad = True
-    crnn.train()
 
+    # model.train() ：启用 BatchNormalization 和 Dropout
+    # model.eval() ：不启用 BatchNormalization 和 Dropout
+    crnn.train()
     data = train_iter.next()
     cpu_images, cpu_texts = data
+    # 图片数量
     batch_size = cpu_images.size(0)
+    # 将图片加载到image
     utils.loadData(image, cpu_images)
     t, l = converter.encode(cpu_texts)
     utils.loadData(text, t)
     utils.loadData(length, l)
     
     optimizer.zero_grad()
+    # 跑crnn
     preds = crnn(image)
+    # tensor变成variable之后才能进行反向传播求梯度?用变量.backward()进行反向传播之后,var.grad中保存了var的梯度
     preds_size = Variable(torch.LongTensor([preds.size(0)] * batch_size))
     cost = criterion(preds, text, preds_size, length) / batch_size
     # crnn.zero_grad()
@@ -246,22 +255,26 @@ def train(net, criterion, optimizer, train_iter):
 
 
 if __name__ == "__main__":
+    # 循环nepoch次数
     for epoch in range(params.nepoch):
+        # 获取数据
         train_iter = iter(train_loader)
         i = 0
+        print(len(train_loader))
+        # 开启一个小循环
         while i < len(train_loader):
             cost = train(crnn, criterion, optimizer, train_iter)
             loss_avg.add(cost)
             i += 1
-
+            # 打印
             if i % params.displayInterval == 0:
                 print('[%d/%d][%d/%d] Loss: %f' %
                       (epoch, params.nepoch, i, len(train_loader), loss_avg.val()))
                 loss_avg.reset()
-
+            # 验证
             if i % params.valInterval == 0:
                 val(crnn, criterion)
 
-            # do checkpointing
+            # 记录检查点
             if i % params.saveInterval == 0:
                 torch.save(crnn.state_dict(), '{0}/netCRNN_{1}_{2}.pth'.format(params.expr_dir, epoch, i))

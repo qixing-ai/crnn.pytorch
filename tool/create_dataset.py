@@ -12,7 +12,7 @@ def checkImageIsValid(imageBin):
         return False
     
     try:
-        imageBuf = np.fromstring(imageBin, dtype=np.uint8)
+        imageBuf = np.frombuffer(imageBin, dtype=np.uint8)
         img = cv2.imdecode(imageBuf, cv2.IMREAD_GRAYSCALE)
         imgH, imgW = img.shape[0], img.shape[1]
     except:
@@ -138,9 +138,9 @@ def show_demo(demo_number, image_path_list, label_list):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--out', type = str, required = True, help = 'lmdb data output path')
+    parser.add_argument('--out', type = str, help = 'lmdb data output path',default='trainlmdb')
     parser.add_argument('--folder', type = str, help = 'path to folder which contains the images')
-    parser.add_argument('--file', type = str, help = 'path to file which contains the image path and label')
+    parser.add_argument('--file', type = str, help = 'path to file which contains the image path and label',default='/Users/weibo/Downloads/train/tmp_labels.txt')
     args = parser.parse_args()
     
     if args.file is not None:
