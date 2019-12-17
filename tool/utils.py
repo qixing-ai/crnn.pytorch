@@ -71,8 +71,8 @@ class strLabelConverter(object):
         """Decode encoded texts back into strs.
 
         Args:
-            torch.LongTensor [length_0 + length_1 + ... length_{n - 1}]: encoded texts.
-            torch.LongTensor [n]: length of each text.
+            torch.LongTensor [length_0 + length_1 + ... length_{n - 1}]: 编码的文本.
+            torch.LongTensor [n]: 文本长度.
 
         Raises:
             AssertionError: when the texts and its length does not match.

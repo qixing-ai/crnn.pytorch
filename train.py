@@ -88,7 +88,7 @@ def net_init():
         print('加载预训练模型 %s' % params.pretrained)
         if params.multi_gpu:
             crnn = torch.nn.DataParallel(crnn)
-        crnn.load_state_dict(torch.load(params.pretrained))
+        crnn.load_state_dict(torch.load(params.pretrained, map_location='cpu'))
     
     return crnn
 
@@ -193,9 +193,11 @@ def val(net, criterion):
 
     max_iter = len(val_loader)
     for i in range(max_iter):
+        # 随机取一批图片
         data = val_iter.next()
         i += 1
         cpu_images, cpu_texts = data
+        # 这批图片量是51
         batch_size = cpu_images.size(0)
         utils.loadData(image, cpu_images)
         t, l = converter.encode(cpu_texts)
@@ -209,14 +211,17 @@ def val(net, criterion):
 
         _, preds = preds.max(2)
         preds = preds.transpose(1, 0).contiguous().view(-1)
+        # sim_preds预测标签集合，raw=true表示带横线，false表示输出标签
         sim_preds = converter.decode(preds.data, preds_size.data, raw=False)
         cpu_texts_decode = []
         for i in cpu_texts:
             cpu_texts_decode.append(i.decode('utf-8', 'strict'))
+        # cpu_texts_decode真实标签
         for pred, target in zip(sim_preds, cpu_texts_decode):
+            # 如果预测正确那么+1
             if pred == target:
                 n_correct += 1
-
+    # ['----------55---1---..0----', '----------55-------..6----', '-----------5-------..0----', '-----------3---1---.-7----', '-----------3-----1---8----', '-------2---3---1-1---2----', '----------44---6---..0----', '-------1---3---0---.-9----', '-----------8---7---..0----', '-----------3---1--1--4----', '-------3---8---------9----', '----------44---1-11--5----', '-------4---3---1-1---2----', '----------33-------.-5----', '-------2---3---1-1---2----', '-----------3---1--1--4----', '----------44-----2---33---', '-----------3---0---..0----', '----------99---1-11--5----', '----------44------1--4----', '-----------3---1---.-5----', '-------3---3---1--1--4----', '----------33-------..0----', '-----------8-----1---8----', '-----------3---6---..0----', '-----------3---6---..0----', '----------55---7---.-8----', '----------66---------77---', '----------88---------9----', '-----------3-----1---8----', '-------1---3-------..0----', '-------1---6---------77---', '----------33------..-7----', '----------55---------6----', '-----------2---0--..-33---', '-----------3---1---.-7----', '-----------3---0---..0----', '-----------5-------..0----', '----------55-------..0----', '----------55---1---..6----', '----------66---------77---', '----------44---------9----', '-------1---6---------77---', '-----------3-----2---33---', '----------33-------..0----', '-----------3---1--..-2----', '----------33-------..0----', '----------33-------..0----', '----------44---0---..0----', '-------5---5-----5---6----', '-----------8---0---..0----']
     raw_preds = converter.decode(preds.data, preds_size.data, raw=True)[:params.n_val_disp]
     for raw_pred, pred, gt in zip(raw_preds, sim_preds, cpu_texts_decode):
         print('%-20s => %-20s, gt: %-20s' % (raw_pred, pred, gt))
@@ -257,6 +262,7 @@ def train(net, criterion, optimizer, train_iter):
 if __name__ == "__main__":
     # 循环nepoch次数
     for epoch in range(params.nepoch):
+        val(crnn, criterion)
         # 获取数据
         train_iter = iter(train_loader)
         i = 0
@@ -273,6 +279,7 @@ if __name__ == "__main__":
                 loss_avg.reset()
             # 验证
             if i % params.valInterval == 0:
+                # 使用新的图片验证训练好的模型
                 val(crnn, criterion)
 
             # 记录检查点
