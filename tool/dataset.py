@@ -49,7 +49,11 @@ class lmdbDataset(Dataset):
             buf.write(imgbuf)
             buf.seek(0)
             try:
-                img = Image.open(buf).convert('L')
+                # 鱼爪特意制作
+                RGB = Image.open(buf).convert('RGBA')
+                R, G, B, A = RGB.split()
+                img = B.point(lambda i: i >= 158 and 255)
+                # img = Image.open(buf).convert('L')
             except IOError:
                 print('Corrupted image for %d' % index)
                 return self[index + 1]
